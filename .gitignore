@@ -5,4 +5,18 @@ __pycache__/
 dist/
 build/
 .pytest_cache/
+
+# Local audit reports (may include crawled URLs, emails, etc.)
 *-report.md
+
+# Secrets and credentials — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+.secrets/
