@@ -6,7 +6,10 @@ End-user install instructions are in the [README](../README.md) and [USER_MANUAL
 
 1. Create an account at [pypi.org](https://pypi.org) and enable 2FA.
 2. Create an API token: Account settings → API tokens → scope **Entire account** (first upload) or **Project: seobuddy** (later).
-3. Store the token locally (never commit it). Use `TWINE_USERNAME=__token__` and `TWINE_PASSWORD=<token>`.
+3. Store the token locally (never commit it). Options:
+   - Copy `.env.example` → `.env` and paste your `pypi-...` token (`.env` is gitignored).
+   - Or export `TWINE_USERNAME=__token__` and `TWINE_PASSWORD=<token>`.
+   - Or run `./scripts/publish-to-pypi.sh` in a terminal — it prompts for the token if needed.
 
 ## Manual release
 
@@ -14,7 +17,13 @@ End-user install instructions are in the [README](../README.md) and [USER_MANUAL
 2. Build and upload:
 
 ```bash
-# from repo root, with PyPI API token in the environment:
+cp .env.example .env   # edit .env once with your token
+./scripts/publish-to-pypi.sh
+```
+
+Or with environment variables:
+
+```bash
 export TWINE_USERNAME=__token__
 export TWINE_PASSWORD=pypi-...
 ./scripts/publish-to-pypi.sh
