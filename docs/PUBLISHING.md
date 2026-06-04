@@ -1,65 +1,131 @@
 # Publishing to PyPI
 
-End-user install instructions are in the [README](../README.md) and [USER_MANUAL.md](USER_MANUAL.md).
+End-user install: `pip install seobuddy` or `pipx install seobuddy` — see [README](../README.md) and [USER_MANUAL.md](USER_MANUAL.md).
 
-## First-time setup (maintainer)
+Package page: https://pypi.org/project/seobuddy/
 
-1. Create an account at [pypi.org](https://pypi.org) and enable 2FA.
-2. Create an API token: Account settings → API tokens → scope **Entire account** (first upload) or **Project: seobuddy** (later).
-3. Store the token locally (never commit it). Options:
-   - Copy `.env.example` → `.env` and paste your `pypi-...` token (`.env` is gitignored).
-   - Or export `TWINE_USERNAME=__token__` and `TWINE_PASSWORD=<token>`.
-   - Or run `./scripts/publish-to-pypi.sh` in a terminal — it prompts for the token if needed.
+---
 
-## Manual release
+## Recommended release flow (GitHub Actions + OIDC)
+
+This is the normal path after trusted publishing is configured. **No PyPI API token in GitHub** is required.
+
+### Each release
+
+1. **Test locally**
+
+   ```bash
+   source .venv/bin/activate
+   pip install -e ".[dev]"
+   pytest -q
+   ```
+
+2. **Bump version** (single source of truth)
+
+   Edit `__version__` in [`src/seobuddy/__init__.py`](../src/seobuddy/__init__.py), e.g. `0.2.0` → `0.2.1`.
+
+   Hatch reads this at build time via `[tool.hatch.version]` in `pyproject.toml`.
+
+3. **Commit and push to `main`**
+
+   ```bash
+   git add -A
+   git commit -m "Release 0.2.1: short description of changes"
+   git push origin main
+   ```
+
+4. **Watch GitHub Actions**
+
+   Workflow: [.github/workflows/publish-pypi.yml](../.github/workflows/publish-pypi.yml) — **Publish to PyPI**
+
+   - Runs on push to `main` when these paths change: `src/**`, `pyproject.toml`, `README.md`, `LICENSE`
+   - Also runs on tags `v*` and on manual **Run workflow**
+   - If that `__version__` is **already** on PyPI → job succeeds but **skips upload**
+   - If the version is **new** → builds and uploads via OIDC
+
+5. **Verify** (after 1–5 minutes)
+
+   ```bash
+   pip index versions seobuddy
+   pip install -U seobuddy
+   seobuddy --help
+   ```
+
+```text
+pytest → bump __version__ → commit → push main → Actions → pip install -U seobuddy
+```
+
+### When the workflow does **not** run
+
+Changes only under `docs/`, `tests/`, `plans/`, etc. do not match the `paths` filter. Either:
+
+- Include a change under `src/**`, `pyproject.toml`, `README.md`, or `LICENSE`, or
+- Push a tag `v*` (e.g. `v0.2.1`), or
+- Actions → **Publish to PyPI** → **Run workflow**
+
+---
+
+## First-time setup (one-time)
+
+### Trusted publisher (required for GitHub Actions)
+
+On [pypi.org](https://pypi.org) → **Your account** → **Publishing** → add a **pending** or project publisher:
+
+| Field | Value |
+|-------|--------|
+| PyPI project name | `seobuddy` |
+| Owner | `nikitaycs50` |
+| Repository | `SEObuddy` |
+| Workflow name | `publish-pypi.yml` |
+| Environment | *(leave empty — workflow does not use a named environment)* |
+
+After the first successful workflow run, the project moves from **Pending publishers** to an active publisher on **seobuddy**.
+
+### PyPI account
+
+1. Register at [pypi.org](https://pypi.org) and enable **2FA**.
+2. No API token is needed for CI if you only use trusted publishing.
+
+---
+
+## Manual release (fallback)
+
+Use if you need to publish without GitHub Actions or OIDC is unavailable.
 
 1. Bump `__version__` in `src/seobuddy/__init__.py`.
-2. Build and upload:
+2. Create an API token: [pypi.org/manage/account/token/](https://pypi.org/manage/account/token/) — scope **Project: seobuddy** (or entire account for first upload).
+3. Upload (never commit the token):
 
-```bash
-cp .env.example .env   # edit .env once with your token
-./scripts/publish-to-pypi.sh
-```
+   ```bash
+   cp .env.example .env   # edit .env with TWINE_PASSWORD=pypi-...
+   ./scripts/publish-to-pypi.sh
+   ```
 
-Or with environment variables:
+   Or:
 
-```bash
-export TWINE_USERNAME=__token__
-export TWINE_PASSWORD=pypi-...
-./scripts/publish-to-pypi.sh
-```
+   ```bash
+   export TWINE_USERNAME=__token__
+   export TWINE_PASSWORD=pypi-...
+   ./scripts/publish-to-pypi.sh
+   ```
 
-Or step by step:
+4. Verify: `pip index versions seobuddy` and `seobuddy --help`.
 
-```bash
-python3 -m pip install --upgrade build twine
-python3 -m build
-twine check dist/*
-TWINE_USERNAME=__token__ TWINE_PASSWORD=pypi-... twine upload dist/*
-```
+---
 
-3. Verify: `pipx install seobuddy` and `seobuddy --help`.
+## Optional triggers
 
-## Automated release (GitHub Actions)
+| Trigger | Command / action |
+|---------|------------------|
+| **Tag** | `git tag v0.2.1 && git push origin v0.2.1` |
+| **Manual** | GitHub → Actions → **Publish to PyPI** → **Run workflow** |
 
-Workflow: [.github/workflows/publish-pypi.yml](../.github/workflows/publish-pypi.yml)
+Same version rules apply: PyPI rejects duplicate versions; bump `__version__` first.
 
-1. On PyPI: project **seobuddy** → Publishing → add trusted publisher:
-   - Owner: `nikitaycs50` (or your GitHub user/org)
-   - Repository: `SEObuddy`
-   - Workflow: `publish-pypi.yml`
-   - Environment: (default)
-2. **Automatic on `main`:** pushing to `main` runs the workflow when package files change (`src/**`, `pyproject.toml`, `README.md`, `LICENSE`). It publishes only if that version is **not** already on PyPI.
+---
 
-3. **Optional tag** (same workflow, no path filter on tags):
+## Notes
 
-```bash
-git tag v0.2.0
-git push origin v0.2.0
-```
-
-4. **Manual:** GitHub → Actions → **Publish to PyPI** → **Run workflow**.
-
-Before each new release, bump `__version__` in `src/seobuddy/__init__.py` (e.g. `0.2.0` → `0.2.1`), commit, and push to `main`. Pushes without a version bump succeed but skip upload (version already exists).
-
-The workflow builds with Hatch and publishes via OIDC (no long-lived PyPI token in GitHub secrets).
+- **Version** lives only in `src/seobuddy/__init__.py` (not duplicated in `pyproject.toml`).
+- **Build** uses Hatchling; workflow runs `python -m build`.
+- Pushes to `main` without a version bump: workflow may run but will skip upload if that version already exists on PyPI.
