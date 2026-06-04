@@ -23,8 +23,11 @@ from seobuddy.checks.base import (
     CATEGORY_LABELS,
     CATEGORY_ORDER,
     CATEGORY_WEIGHTS,
+    SITE_CATEGORY_LABELS,
+    SITE_CHECK_ORDER,
     aggregate_category_scores,
     letter_grade,
+    site_check_pages_ok,
     top_issues,
 )
 from seobuddy.models import AuditConfig, PageAudit, SiteAudit, format_user_agent_display
@@ -58,7 +61,8 @@ def show_about(console: Console) -> None:
         "[bold]How it works[/bold]\n\n"
         "1. Validates and normalizes your seed URL\n"
         "2. [cyan]BFS-crawls[/cyan] same-domain HTML pages with async HTTP (httpx)\n"
-        "3. Audits each page with [cyan]10 weighted SEO checks[/cyan] (BeautifulSoup + lxml)\n"
+        "3. Fetches [cyan]robots.txt[/cyan] and [cyan]sitemap.xml[/cyan]; audits each page with "
+        "[cyan]11 weighted SEO checks[/cyan] (BeautifulSoup + lxml)\n"
         "4. Renders a Rich terminal UI — progress, per-page scores, final summary\n"
         "5. Writes [cyan]yyyymmddhhmm-<hostname>-report.md[/cyan] to [cyan]--output-dir[/cyan]\n\n"
         "[bold]Defaults[/bold]\n"
@@ -66,7 +70,7 @@ def show_about(console: Console) -> None:
         "Concurrency [cyan]5[/cyan]  ·  Timeout [cyan]10s[/cyan]\n\n"
         "[bold]Crawl behavior[/bold]\n"
         "Same domain only, path deduplication, configurable depth and page cap. "
-        "Static HTML only (no JavaScript rendering). robots.txt is not consulted in v0.1."
+        "Static HTML only (no JavaScript rendering). Crawl respects robots.txt Disallow rules."
     )
     console.print(Panel(workflow, border_style="dim"))
 
@@ -74,6 +78,10 @@ def show_about(console: Console) -> None:
         f"• {CATEGORY_LABELS[cat]} ({int(CATEGORY_WEIGHTS[cat] * 100)}%)"
         for cat in CATEGORY_ORDER
     ]
+    category_lines.extend(
+        f"• {SITE_CATEGORY_LABELS[key]} (site-wide)"
+        for key in SITE_CHECK_ORDER
+    )
     categories = "[bold]Audit categories[/bold]\n\n" + "\n".join(category_lines)
     console.print(Panel(categories, border_style="dim"))
 
@@ -195,6 +203,8 @@ def show_summary(console: Console, site: SiteAudit) -> None:
     )
     if site.crawl_capped:
         header += "  ·  [yellow]Crawl limit reached[/yellow]"
+    if site.skipped_robots:
+        header += f"  ·  [dim]{site.skipped_robots} skipped (robots.txt)[/dim]"
     if site.report_path:
         header += f"\nReport: {site.report_path.name}"
 
@@ -212,6 +222,19 @@ def show_summary(console: Console, site: SiteAudit) -> None:
             CATEGORY_LABELS[cat],
             f"[{cat_style}]{cat_bar}  {data['score']}/100[/{cat_style}]",
             f"{data['pages_ok']}/{data['pages_total']}",
+        )
+
+    for key in SITE_CHECK_ORDER:
+        r = site.site_results.get(key)
+        if not r:
+            continue
+        cat_style = score_style(r.score)
+        cat_bar = score_bar(r.score, 10)
+        label = SITE_CATEGORY_LABELS.get(key, key)
+        table.add_row(
+            label,
+            f"[{cat_style}]{cat_bar}  {r.score}/100[/{cat_style}]",
+            site_check_pages_ok(r.score),
         )
 
     console.print()

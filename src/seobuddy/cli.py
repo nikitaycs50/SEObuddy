@@ -14,7 +14,11 @@ from rich.console import Console
 
 from seobuddy import CLI_EPILOG, __version__
 from seobuddy.auditor import audit_page
+from seobuddy.checks.hreflang import validate_hreflang_reciprocity
+from seobuddy.checks.robots_check import audit_robots
+from seobuddy.checks.sitemap_check import audit_sitemap
 from seobuddy.crawler import AsyncCrawler
+from seobuddy.site_resources import fetch_site_resources
 from seobuddy.display import (
     crawl_progress,
     make_console,
@@ -67,9 +71,6 @@ async def _run_audit(
     hostname = hostname_from_url(url)
     site = SiteAudit(seed_url=url, hostname=hostname)
     context = SiteContext()
-    crawler = AsyncCrawler(config)
-    context.fetched_urls = crawler.fetched_urls
-
     console = make_console(config)
     show_banner(console, config, url)
 
@@ -85,6 +86,20 @@ async def _run_audit(
         timeout=timeout,
         headers=headers,
     ) as link_client:
+        robots, sitemap = await fetch_site_resources(link_client, url, config)
+        context.robots = robots
+        context.sitemap = sitemap
+
+        site.site_results["robots"] = audit_robots(robots, url)
+        site.site_results["sitemap"] = await audit_sitemap(
+            sitemap,
+            set(),
+            link_client,
+        )
+
+        crawler = AsyncCrawler(config, robots=robots)
+        context.fetched_urls = crawler.fetched_urls
+
         with crawl_progress(console, total=config.max_pages) as (progress, task_id):
             async for page in crawler.crawl(url):
                 context.fetched_urls = crawler.fetched_urls
@@ -107,11 +122,30 @@ async def _run_audit(
                 )
                 show_page_result(console, page_audit)
 
-    site.elapsed_s = time.perf_counter() - start
-    site.crawl_capped = crawler.crawl_capped
+        site.elapsed_s = time.perf_counter() - start
+        site.crawl_capped = crawler.crawl_capped
+        site.skipped_robots = crawler.skipped_robots
 
-    if not site.pages:
-        raise RuntimeError("No pages were fetched")
+        if not site.pages:
+            if robots.available and not robots.can_fetch(url):
+                raise RuntimeError(
+                    "No pages were fetched: seed URL is disallowed in robots.txt "
+                    f"for User-Agent {config.user_agent!r}"
+                )
+            raise RuntimeError("No pages were fetched")
+
+        crawled: set[str] = set()
+        for p in site.pages:
+            crawled.add(p.page.final_url)
+            norm = normalize_url(p.page.final_url) or normalize_url(p.page.url)
+            if norm:
+                crawled.add(norm)
+        site.site_results["sitemap"] = await audit_sitemap(
+            sitemap,
+            crawled,
+            link_client,
+        )
+        validate_hreflang_reciprocity(context, site.pages)
 
     site.report_path = write_report(site, config.output_dir)
     show_summary(console, site)

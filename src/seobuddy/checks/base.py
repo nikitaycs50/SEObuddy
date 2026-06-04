@@ -15,6 +15,7 @@ CATEGORY_ORDER = [
     "links",
     "images",
     "canonical",
+    "hreflang",
     "technical",
 ]
 
@@ -28,19 +29,34 @@ CATEGORY_LABELS = {
     "links": "Links",
     "images": "Images",
     "canonical": "Canonical",
+    "hreflang": "Hreflang",
     "technical": "Technical",
 }
+
+SITE_CHECK_ORDER = ("robots", "sitemap")
+
+SITE_CATEGORY_LABELS = {
+    "robots": "Robots.txt",
+    "sitemap": "Sitemap",
+}
+
+
+def site_check_pages_ok(score: int) -> str:
+    """Pages OK column for site-wide checks (single site-level pass)."""
+    ok = 1 if score >= 80 else 0
+    return f"{ok}/1"
 
 CATEGORY_WEIGHTS = {
     "title": 0.15,
     "meta": 0.10,
-    "opengraph": 0.10,
-    "jsonld": 0.10,
-    "headings": 0.10,
+    "opengraph": 0.09,
+    "jsonld": 0.09,
+    "headings": 0.09,
     "content": 0.15,
-    "links": 0.10,
-    "images": 0.10,
+    "links": 0.09,
+    "images": 0.09,
     "canonical": 0.05,
+    "hreflang": 0.05,
     "technical": 0.05,
 }
 

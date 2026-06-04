@@ -75,6 +75,9 @@ class SiteContext:
     metas_seen: set[str] = field(default_factory=set)
     canonicals_seen: set[str] = field(default_factory=set)
     fetched_urls: set[str] = field(default_factory=set)
+    hreflang_edges: list[tuple[str, str, str]] = field(default_factory=list)
+    robots: object | None = None  # RobotsInfo from site_resources
+    sitemap: object | None = None  # SitemapInfo from site_resources
 
 
 @dataclass
@@ -82,10 +85,12 @@ class SiteAudit:
     seed_url: str
     hostname: str
     pages: list[PageAudit] = field(default_factory=list)
+    site_results: dict[str, CheckResult] = field(default_factory=dict)
     started_at: datetime = field(default_factory=datetime.now)
     elapsed_s: float = 0.0
     report_path: Path | None = None
     crawl_capped: bool = False
+    skipped_robots: int = 0
 
     @property
     def site_score(self) -> int:

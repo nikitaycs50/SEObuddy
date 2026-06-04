@@ -1,9 +1,23 @@
 [project]
 name = "seobuddy"
-version = "0.1.0"
-description = "CLI tool that crawls a website and produces a technical SEO audit"
+dynamic = ["version"]
+description = "Technical SEO audit CLI — crawl a site and get terminal scores plus a Markdown report (not affiliated with seobuddy.com)"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "NikitaY.com" }]
+keywords = ["seo", "audit", "cli", "crawler", "technical-seo"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP :: Site Management",
+]
 dependencies = [
     "typer>=0.12",
     "httpx[http2]>=0.27",
@@ -11,6 +25,12 @@ dependencies = [
     "lxml>=5.0",
     "rich>=13.7",
 ]
+
+[project.urls]
+Homepage = "https://nikitay.com/"
+Documentation = "https://github.com/nikitaycs50/SEObuddy"
+Repository = "https://github.com/nikitaycs50/SEObuddy"
+Issues = "https://github.com/nikitaycs50/SEObuddy/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -25,10 +45,10 @@ seobuddy = "seobuddy.cli:run"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/seobuddy"]
+[tool.hatch.version]
+path = "src/seobuddy/__init__.py"
 
-[tool.hatch.build.targets.sdist]
+[tool.hatch.build.targets.wheel]
 packages = ["src/seobuddy"]
 
 [tool.pytest.ini_options]

@@ -11,10 +11,16 @@ def make_soup(html: str) -> BeautifulSoup:
     return BeautifulSoup(html, "lxml")
 
 
-def page_with_html(html: str, url: str = "https://example.com/") -> PageData:
+def page_with_html(
+    html: str,
+    url: str = "https://example.com/",
+    *,
+    final_url: str | None = None,
+) -> PageData:
+    resolved = final_url or url
     return PageData(
         url=url,
-        final_url=url,
+        final_url=resolved,
         status_code=200,
         headers={"content-type": "text/html"},
         html=html,

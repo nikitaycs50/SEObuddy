@@ -2,6 +2,8 @@
 
 This document shows **sample output** from a real audit run. It is for documentation only — not generated on every install.
 
+Install the CLI first: `pip install seobuddy` or `pipx install seobuddy` (see [USER_MANUAL.md](USER_MANUAL.md)).
+
 ## Command
 
 ```bash

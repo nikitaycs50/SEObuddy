@@ -8,9 +8,12 @@ from pathlib import Path
 from seobuddy.checks.base import (
     CATEGORY_LABELS,
     CATEGORY_ORDER,
+    SITE_CATEGORY_LABELS,
+    SITE_CHECK_ORDER,
     aggregate_category_scores,
     collect_recommendations,
     letter_grade,
+    site_check_pages_ok,
     top_issues,
 )
 from seobuddy import AUTHOR_NAME, AUTHOR_URL, CREATED_BY
@@ -52,6 +55,10 @@ def _build_markdown(site: SiteAudit) -> str:
     lines.append(f"- **Pages crawled:** {len(site.pages)}")
     if site.crawl_capped:
         lines.append("- **Crawl note:** Stopped at max-pages limit (more URLs were skipped)")
+    if site.skipped_robots:
+        lines.append(
+            f"- **robots.txt:** {site.skipped_robots} URL(s) skipped (Disallow rules)"
+        )
     lines.append(f"- **Duration:** {site.elapsed_s:.1f}s")
     lines.append("")
     lines.append("### Top issues")
@@ -73,7 +80,30 @@ def _build_markdown(site: SiteAudit) -> str:
             f"| {CATEGORY_LABELS[cat]} | {data['score']}/100 | "
             f"{data['pages_ok']}/{data['pages_total']} |"
         )
+    for key in SITE_CHECK_ORDER:
+        r = site.site_results.get(key)
+        if not r:
+            continue
+        label = SITE_CATEGORY_LABELS.get(key, key)
+        lines.append(
+            f"| {label} | {r.score}/100 | {site_check_pages_ok(r.score)} |"
+        )
     lines.append("")
+
+    for key in SITE_CHECK_ORDER:
+        r = site.site_results.get(key)
+        if not r:
+            continue
+        label = SITE_CATEGORY_LABELS.get(key, key)
+        lines.append(f"### {label} ({r.score}/100)")
+        for f in r.findings:
+            lines.append(f"- {f}")
+        if r.suggestions:
+            lines.append("")
+            lines.append("Suggestions:")
+            for s in r.suggestions:
+                lines.append(f"- {s}")
+        lines.append("")
 
     lines.append("## 3. Page-by-Page Analysis")
     lines.append("")

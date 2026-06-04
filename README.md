@@ -1,6 +1,12 @@
 # SEObuddy
 
+[![PyPI version](https://img.shields.io/pypi/v/seobuddy.svg)](https://pypi.org/project/seobuddy/)
+[![Python versions](https://img.shields.io/pypi/pyversions/seobuddy.svg)](https://pypi.org/project/seobuddy/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 A Python CLI that crawls a website and runs a **technical SEO audit**. You get live progress and scores in the terminal, plus a **Markdown report** you can open in any editor or share with your team.
+
+> **Note:** This is an open-source **technical SEO audit CLI**, not affiliated with the commercial product at [seobuddy.com](https://seobuddy.com/).
 
 ## Documentation
 
@@ -9,11 +15,13 @@ Full manuals (same content as below, in more detail):
 - [User Manual](docs/USER_MANUAL.md) — installation, usage, reading results, troubleshooting
 - [Technical Manual](docs/TECHNICAL_MANUAL.md) — architecture, modules, scoring, tests, extension points
 - [Report Example](docs/REPORT_EXAMPLE.md) — sample terminal summary and Markdown report (`google.com` audit)
+- [Publishing](docs/PUBLISHING.md) — PyPI releases (manual upload and GitHub Actions)
 
 ## Features
 
 - **Async BFS crawler** — configurable depth, same-domain internal links only, deduplicated URLs
-- **10 weighted audit categories** — title, meta, Open Graph, JSON-LD, headings, content, links, images, canonical, technical
+- **11 weighted per-page categories** — title, meta, Open Graph, JSON-LD, headings, content, links, images, canonical, hreflang, technical
+- **Site-wide checks** — robots.txt validation and crawl enforcement, XML sitemap audit with coverage metrics
 - **Per-page and site scores** — 0–100 with weighted category averages and letter grades
 - **Rich terminal UI** — progress bars, color-coded scores, live per-page results, final summary panel
 - **Markdown reports** — executive summary, score breakdown, page-by-page findings, prioritized recommendations
@@ -26,9 +34,19 @@ Full manuals (same content as below, in more detail):
 
 ### 1. Install
 
-From the project directory:
+**From PyPI** (recommended — no clone or GitHub URL required):
 
 ```bash
+pip install seobuddy
+# or, for an isolated global CLI (recommended on macOS/Linux):
+pipx install seobuddy
+```
+
+**From source** (contributors / development):
+
+```bash
+git clone https://github.com/nikitaycs50/SEObuddy.git
+cd SEObuddy
 python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e .
@@ -38,6 +56,13 @@ Confirm the command is available:
 
 ```bash
 seobuddy --help
+```
+
+Upgrade an existing install:
+
+```bash
+pip install -U seobuddy
+# or: pipx upgrade seobuddy
 ```
 
 ### 2. Run a simple audit
@@ -96,7 +121,7 @@ seobuddy https://nikitay.com --output-dir ./reports
 seobuddy https://nikitay.com --no-color
 
 # Custom User-Agent (default is Chrome-like)
-seobuddy https://nikitay.com --user-agent "SEObuddy/0.1.0 (+https://nikitay.com)"
+seobuddy https://nikitay.com --user-agent "SEObuddy/0.2.0 (+https://nikitay.com)"
 
 # Module entry point
 python -m seobuddy https://nikitay.com
@@ -179,14 +204,22 @@ Page score = weighted average of categories. Site score = average of all page sc
 |----------|--------|-------------------|
 | **Title** | 15% | `<title>` present, ~50–60 characters, unique across crawled pages |
 | **Meta description** | 10% | `meta name="description"`, ~150–160 characters, unique |
-| **Open Graph** | 10% | `og:title`, `og:description`, `og:image`, `og:url` |
-| **JSON-LD** | 10% | Valid `application/ld+json`, schema type, required fields |
-| **Headings** | 10% | Exactly one H1, logical heading order (no skipped levels) |
+| **Open Graph** | 9% | `og:title`, `og:description`, `og:image`, `og:url` |
+| **JSON-LD** | 9% | Valid `application/ld+json`, schema type, required fields |
+| **Headings** | 9% | Exactly one H1, logical heading order (no skipped levels) |
 | **Content** | 15% | Word count (300+ tiers), text vs HTML ratio (target ≥ 15%) |
-| **Links** | 10% | Internal links reachable (HEAD/GET probes), descriptive anchor text |
-| **Images** | 10% | Non-empty `alt` on images, lazy loading where applicable |
+| **Links** | 9% | Internal links reachable (HEAD/GET probes), descriptive anchor text |
+| **Images** | 9% | Non-empty `alt` on images, lazy loading where applicable |
 | **Canonical** | 5% | `link rel="canonical"` present and consistent |
+| **Hreflang** | 5% | `link rel="alternate" hreflang` tags, reciprocity across crawled pages |
 | **Technical** | 5% | Viewport meta, HTTPS, reasonable URL length and structure |
+
+**Site-wide** (reported separately from per-page weighted scores):
+
+| Check | What it looks for |
+|-------|-------------------|
+| **Robots.txt** | Fetchable file, valid rules, crawl respects `Disallow` for your User-Agent |
+| **Sitemap** | XML sitemap reachable, valid structure, coverage vs crawled URLs |
 
 **Content tiers:** &lt;300 words → 0; 300–499 → 60; 500–799 → 80; 800+ → 100 (combined with text/HTML ratio).
 
@@ -210,7 +243,7 @@ SEObuddy is a **Python 3.11+** package (Hatchling, `src/` layout) with a **Typer
 
 1. Validates and normalizes the seed URL.
 2. **BFS-crawls** same-domain HTML with **httpx** (async).
-3. **Audits** each page with **BeautifulSoup** + **lxml** and ten pluggable checks.
+3. **Audits** each page with **BeautifulSoup** + **lxml** and eleven pluggable checks, plus site-wide robots.txt and sitemap checks.
 4. Renders **Rich** terminal UI and writes a **Markdown** report.
 
 ```mermaid
@@ -258,7 +291,7 @@ flowchart LR
 
 1. Parse HTML with BeautifulSoup + lxml.
 2. Non-HTML or error status: stub checks except **technical** (URL/headers still audited).
-3. Sync checks: title, meta, opengraph, jsonld, headings, content, images, canonical, technical.
+3. Sync checks: title, meta, opengraph, jsonld, headings, content, images, canonical, hreflang, technical.
 4. Async `links.check_async` with shared `httpx` client.
 5. `weighted_page_score(results)` and `path_display(final_url)`.
 
@@ -275,11 +308,16 @@ Checks update `SiteContext` for cross-page deduplication (titles, meta descripti
 
 ```text
 SEObuddy/
+├── LICENSE
 ├── pyproject.toml
 ├── README.md
 ├── docs/
 │   ├── USER_MANUAL.md
-│   └── TECHNICAL_MANUAL.md
+│   ├── TECHNICAL_MANUAL.md
+│   ├── REPORT_EXAMPLE.md
+│   └── PUBLISHING.md
+├── scripts/
+│   └── publish-to-pypi.sh
 ├── src/seobuddy/
 │   ├── __init__.py         # __version__
 │   ├── __main__.py
@@ -288,11 +326,13 @@ SEObuddy/
 │   ├── auditor.py
 │   ├── models.py
 │   ├── url_utils.py
+│   ├── site_resources.py
 │   ├── display.py
 │   ├── report.py
 │   └── checks/
 │       ├── base.py
-│       ├── title.py … technical.py
+│       ├── title.py … technical.py, hreflang.py
+│       ├── robots_check.py, sitemap_check.py
 └── tests/
     ├── conftest.py
     ├── helpers.py
@@ -334,15 +374,14 @@ Expect: terminal progress, per-page lines, report `*-nikitay.com-report.md` with
 
 **CI / headless:** `--no-color` and a dedicated `--output-dir` for artifacts.
 
-## Known limitations (v0.1)
+## Known limitations (v0.2)
 
 | Area | Limitation |
 |------|------------|
-| robots.txt | Not consulted |
 | JavaScript rendering | Static HTML only (no browser execution) |
 | Rate limiting | User-controlled via `--concurrency` only |
-| International SEO | No hreflang checks |
-| Sitemap | Not used for discovery |
+| Hreflang | HTML `<link>` tags only; no HTTP header alternates |
+| Sitemap | Audited for coverage; not used to discover crawl URLs |
 | Authentication | No logged-in page support |
 
 ## Errors and troubleshooting
@@ -356,8 +395,8 @@ Expect: terminal progress, per-page lines, report `*-nikitay.com-report.md` with
 
 | Problem | What to try |
 |---------|-------------|
-| `command not found: seobuddy` | Activate venv, `pip install -e .` |
-| `externally-managed-environment` (Homebrew Python) | Use a venv, not system-wide pip |
+| `command not found: seobuddy` | PyPI: `pip install seobuddy` or `pipx install seobuddy`. Dev: activate venv and `pip install -e .` |
+| `externally-managed-environment` (Homebrew Python) | Use `pipx install seobuddy`, or a venv — avoid `pip install` into system Python |
 | `Could not connect to host` | Check URL spelling, browser/curl, increase `--timeout` |
 | Low content score on SPAs | Only HTTP HTML is analyzed, not client-rendered DOM |
 | Unexpected extra pages | Some sites inject CDN paths; `/cdn-cgi/` is skipped |
@@ -366,10 +405,12 @@ Expect: terminal progress, per-page lines, report `*-nikitay.com-report.md` with
 
 - Only requests URLs you point it at, within same domain and depth you set.
 - Default User-Agent mimics **Chrome desktop** so fewer sites block the crawler; set `--user-agent` explicitly if your policy requires an identifiable bot string.
-- **robots.txt** is not implemented in v0.1 — use reasonable depth and concurrency on live sites.
+- Crawl **respects robots.txt** `Disallow` rules for your User-Agent; use reasonable depth and concurrency on live sites.
 
-## License and copyright
+## License
 
-Copyright © 2026 [NikitaY.com](https://nikitay.com/). All rights reserved.
+MIT License — see [LICENSE](LICENSE).
 
-Created by [NikitaY.com](https://nikitay.com/).
+Copyright © 2026 [NikitaY.com](https://nikitay.com/). Created by [NikitaY.com](https://nikitay.com/).
+
+This project is a **technical SEO audit CLI** and is not affiliated with [seobuddy.com](https://seobuddy.com/).

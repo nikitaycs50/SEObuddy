@@ -9,6 +9,7 @@ from seobuddy.checks import (
     canonical,
     content,
     headings,
+    hreflang,
     images,
     jsonld,
     links,
@@ -72,6 +73,7 @@ async def audit_page(
         results["links"] = await links.check_async(soup, page, context, config, client)
         results["images"] = images.check(soup, page, context)
         results["canonical"] = canonical.check(soup, page, context)
+        results["hreflang"] = hreflang.check(soup, page, context)
         results["technical"] = technical.check(soup, page, context)
 
     score = weighted_page_score(results)

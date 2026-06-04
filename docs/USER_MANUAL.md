@@ -2,13 +2,29 @@
 
 SEObuddy is a command-line tool that crawls your website and produces a **technical SEO audit**. You see live progress and scores in the terminal, and get a **Markdown report** you can open in any editor or share with your team.
 
+> **Note:** This CLI is not affiliated with the commercial product at [seobuddy.com](https://seobuddy.com/).
+
 ---
 
 ## Quick start
 
 ### 1. Install
 
-From the project directory:
+**From PyPI:**
+
+```bash
+pip install seobuddy
+# or: pipx install seobuddy   # recommended for a global CLI on macOS/Linux
+```
+
+Upgrade:
+
+```bash
+pip install -U seobuddy
+# or: pipx upgrade seobuddy
+```
+
+**From source** (development):
 
 ```bash
 python3 -m venv .venv
@@ -114,7 +130,7 @@ seobuddy https://nikitay.com --output-dir ./reports
 **Custom User-Agent (default is Chrome-like):**
 
 ```bash
-seobuddy https://nikitay.com --user-agent "SEObuddy/0.1.0 (+https://nikitay.com)"
+seobuddy https://nikitay.com --user-agent "SEObuddy/0.2.0 (+https://nikitay.com)"
 ```
 
 **Run without colors (logs, CI):**
@@ -275,7 +291,15 @@ For Google, prefer: `seobuddy https://google.com --depth 0` or `--max-pages 10`.
 
 ### `command not found: seobuddy`
 
-Activate the virtual environment and reinstall:
+**Installed from PyPI:** ensure your install path is on `PATH`:
+
+```bash
+pip install seobuddy
+# or: pipx install seobuddy
+pipx ensurepath   # if pipx was just installed
+```
+
+**Developing from source:** activate the virtual environment and reinstall:
 
 ```bash
 source .venv/bin/activate
@@ -284,7 +308,7 @@ pip install -e .
 
 ### `externally-managed-environment` (macOS Homebrew Python)
 
-Use a virtual environment (see Quick start), not system-wide `pip install`.
+Prefer `pipx install seobuddy` for a global CLI, or use a project virtual environment — do not install into system Python with plain `pip install`.
 
 ### `Could not connect to host`
 
@@ -306,7 +330,7 @@ Some sites inject links (e.g. email protection). SEObuddy skips common CDN paths
 
 - SEObuddy only requests URLs you point it at, within the same domain and depth you set.
 - Default requests use a **Chrome desktop** User-Agent for compatibility; set `--user-agent` explicitly if your policy requires an identifiable bot string.
-- Respect `robots.txt` is **not** implemented in v0.1 — use reasonable depth and concurrency on live sites.
+- Crawl respects **robots.txt** `Disallow` for your User-Agent; use reasonable depth and concurrency on live sites.
 
 ---
 
@@ -314,8 +338,11 @@ Some sites inject links (e.g. email protection). SEObuddy skips common CDN paths
 
 - [Report Example](REPORT_EXAMPLE.md) — sample terminal summary and Markdown report (`google.com` audit).
 - [Technical Manual](TECHNICAL_MANUAL.md) — architecture, code layout, scoring formulas, tests.
+- [Publishing](PUBLISHING.md) — PyPI releases (maintainers).
 - [README](../README.md) — project overview and development setup.
 
 ---
+
+Licensed under the MIT License — see [LICENSE](../LICENSE).
 
 Copyright © 2026 [NikitaY.com](https://nikitay.com/). Created by [NikitaY.com](https://nikitay.com/).

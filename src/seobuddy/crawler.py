@@ -12,6 +12,7 @@ import httpx
 
 from seobuddy.html_utils import is_html_content, parse_html
 from seobuddy.models import AuditConfig, PageData
+from seobuddy.site_resources import RobotsInfo
 from seobuddy.url_utils import crawl_dedup_key, is_crawlable_url, normalize_url, same_domain
 
 
@@ -36,16 +37,22 @@ class AsyncCrawler:
         self,
         config: AuditConfig,
         transport: httpx.AsyncBaseTransport | None = None,
+        robots: RobotsInfo | None = None,
     ):
         self.config = config
         self._transport = transport
+        self._robots = robots
         self._visited: set[str] = set()
         self.fetched_urls: set[str] = set()
         self.pages_fetched = 0
         self.crawl_capped = False
+        self.skipped_robots = 0
 
     def _try_enqueue(self, url: str, depth: int, queue: deque[tuple[str, int]]) -> None:
         if self.pages_fetched + len(queue) >= self.config.max_pages:
+            return
+        if self._robots and not self._robots.can_fetch(url):
+            self.skipped_robots += 1
             return
         key = crawl_dedup_key(url)
         if key in self._visited:

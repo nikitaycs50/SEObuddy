@@ -2,6 +2,8 @@
 
 This document describes how SEObuddy is built, how data flows through the system, and how to extend or maintain it.
 
+Install for end users: `pip install seobuddy` or `pipx install seobuddy` ([PyPI](https://pypi.org/project/seobuddy/)). This project is not affiliated with [seobuddy.com](https://seobuddy.com/).
+
 ---
 
 ## Overview
@@ -10,7 +12,7 @@ SEObuddy is a **Python 3.11+** package distributed via `pyproject.toml` (Hatchli
 
 1. Validates and normalizes the seed URL.
 2. **BFS-crawls** same-domain HTML pages with **httpx** (async).
-3. **Audits** each page with **BeautifulSoup** + **lxml** and ten pluggable checks.
+3. **Audits** each page with **BeautifulSoup** + **lxml** and eleven pluggable checks, plus site-wide robots.txt and sitemap checks.
 4. Renders **Rich** terminal UI and writes a **Markdown** report.
 
 ```mermaid
@@ -28,12 +30,16 @@ flowchart LR
 
 ```text
 SEObuddy/
+├── LICENSE
 ├── pyproject.toml          # dependencies, entry point, pytest config
 ├── README.md
 ├── docs/
 │   ├── USER_MANUAL.md
 │   ├── TECHNICAL_MANUAL.md
-│   └── REPORT_EXAMPLE.md
+│   ├── REPORT_EXAMPLE.md
+│   └── PUBLISHING.md
+├── scripts/
+│   └── publish-to-pypi.sh
 ├── src/seobuddy/
 │   ├── __init__.py         # __version__
 │   ├── __main__.py         # python -m seobuddy
@@ -42,11 +48,13 @@ SEObuddy/
 │   ├── auditor.py          # audit_page()
 │   ├── models.py           # dataclasses
 │   ├── url_utils.py        # normalize, domain, skip rules
+│   ├── site_resources.py   # robots.txt + sitemap fetch/parse
 │   ├── display.py          # Rich UI
 │   ├── report.py           # Markdown generator
 │   └── checks/
 │       ├── base.py         # weights, scoring helpers
-│       ├── title.py … technical.py
+│       ├── title.py … technical.py, hreflang.py
+│       ├── robots_check.py, sitemap_check.py
 └── tests/
     ├── conftest.py
     ├── helpers.py
@@ -190,14 +198,17 @@ Each module implements scoring per the product spec. Weights sum to **1.0**:
 |-----|--------|--------|
 | title | 0.15 | `title.py` |
 | meta | 0.10 | `meta.py` |
-| opengraph | 0.10 | `opengraph.py` |
-| jsonld | 0.10 | `jsonld.py` |
-| headings | 0.10 | `headings.py` |
+| opengraph | 0.09 | `opengraph.py` |
+| jsonld | 0.09 | `jsonld.py` |
+| headings | 0.09 | `headings.py` |
 | content | 0.15 | `content.py` |
-| links | 0.10 | `links.py` |
-| images | 0.10 | `images.py` |
+| links | 0.09 | `links.py` |
+| images | 0.09 | `images.py` |
 | canonical | 0.05 | `canonical.py` |
+| hreflang | 0.05 | `hreflang.py` |
 | technical | 0.05 | `technical.py` |
+
+**Site-wide** (not in page weighted average): `robots_check.py`, `sitemap_check.py` via `site_resources.py`.
 
 ### Scoring helpers (`base.py`)
 
@@ -337,29 +348,40 @@ Use `--no-color` and a dedicated `--output-dir` for artifacts.
 
 ---
 
-## Known limitations (v0.1)
+## Known limitations (v0.2)
 
 | Area | Limitation |
 |------|------------|
-| robots.txt | Not consulted |
 | JavaScript rendering | Not executed; static HTML only |
 | Rate limiting | User-controlled via `--concurrency` only |
-| International SEO | No hreflang checks |
-| Sitemap | Not used for discovery |
+| Hreflang | HTML link tags only; reciprocity within crawled pages |
+| Sitemap | Audit/coverage only; not crawl discovery |
 | Authentication | No support for logged-in pages |
 
 ---
 
 ## Build and packaging
 
+- **Distribution:** [PyPI](https://pypi.org/project/seobuddy/) package name `seobuddy` (console script `seobuddy`).
 - **Build backend:** Hatchling (`hatchling.build`).
 - **Package path:** `src/seobuddy` (src layout).
-- **Version:** `src/seobuddy/__init__.py` → `__version__`.
+- **Version:** single source in `src/seobuddy/__init__.py` → `__version__` (Hatch reads via `[tool.hatch.version]`).
+
+**End users:**
+
+```bash
+pip install seobuddy
+pipx install seobuddy
+```
+
+**Contributors:**
 
 ```bash
 pip install -e .          # local development
 pip install -e ".[dev]"   # + pytest
 ```
+
+**Maintainers:** see [PUBLISHING.md](PUBLISHING.md).
 
 ---
 
@@ -378,10 +400,12 @@ pip install -e ".[dev]"   # + pytest
 
 ## Version
 
-Document version aligns with package **v0.1.0**.
+Document version aligns with package **v0.2.0**.
 
-For user-facing instructions see [USER_MANUAL.md](USER_MANUAL.md). Sample output: [REPORT_EXAMPLE.md](REPORT_EXAMPLE.md).
+For user-facing instructions see [USER_MANUAL.md](USER_MANUAL.md). Sample output: [REPORT_EXAMPLE.md](REPORT_EXAMPLE.md). Releases: [PUBLISHING.md](PUBLISHING.md).
 
 ---
+
+Licensed under the MIT License — see [LICENSE](../LICENSE).
 
 Copyright © 2026 [NikitaY.com](https://nikitay.com/). Created by [NikitaY.com](https://nikitay.com/).
