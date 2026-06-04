@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="520" viewBox="0 0 780 520" role="img" aria-label="SEObuddy terminal output preview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#161b22"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="780" height="520" rx="14" fill="url(#bg)" filter="url(#shadow)"/>
+  <rect x="1" y="1" width="778" height="518" rx="13" fill="none" stroke="#30363d" stroke-width="2"/>
+
+  <circle cx="28" cy="28" r="7" fill="#ff5f57"/>
+  <circle cx="50" cy="28" r="7" fill="#febc2e"/>
+  <circle cx="72" cy="28" r="7" fill="#28c840"/>
+  <text x="390" y="32" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#8b949e">seobuddy https://nikitay.com</text>
+
+  <rect x="36" y="56" width="708" height="80" rx="8" fill="#0d1117" stroke="#58a6ff" stroke-width="1.5"/>
+  <text x="56" y="84" font-family="ui-monospace, Menlo, monospace" font-size="22" fill="#58a6ff" font-weight="700">SEObuddy</text>
+  <text x="200" y="84" font-family="ui-monospace, Menlo, monospace" font-size="14" fill="#8b949e">v0.2.0</text>
+  <text x="56" y="104" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#c9d1d9">Auditing: https://nikitay.com</text>
+  <text x="56" y="122" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#8b949e">Depth: 0 | Concurrency: 5 | Max pages: 50</text>
+
+  <text x="36" y="168" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#8b949e">Crawling</text>
+  <rect x="110" y="154" width="520" height="14" rx="7" fill="#21262d"/>
+  <rect x="110" y="154" width="520" height="14" rx="7" fill="#3fb950"/>
+  <text x="648" y="166" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3fb950">1/1</text>
+  <text x="700" y="166" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#8b949e">1.6s</text>
+
+  <rect x="36" y="186" width="128" height="12" rx="3" fill="#21262d"/>
+  <rect x="36" y="186" width="102" height="12" rx="3" fill="#d29922"/>
+  <text x="176" y="196" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#d29922" font-weight="700">64/100</text>
+  <text x="250" y="196" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#c9d1d9">/</text>
+  <text x="270" y="196" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#d29922">title ~</text>
+  <text x="350" y="196" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#d29922">meta ~</text>
+  <text x="420" y="196" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3fb950">og OK</text>
+  <text x="490" y="196" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3fb950">h1 OK</text>
+
+  <rect x="36" y="220" width="708" height="52" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="56" y="244" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#3fb950" font-weight="700">SITE AUDIT COMPLETE</text>
+  <text x="280" y="244" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#8b949e">- nikitay.com</text>
+  <text x="56" y="264" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#c9d1d9">1 page | 1.6s | *-nikitay.com-report.md</text>
+
+  <rect x="36" y="288" width="708" height="64" rx="8" fill="#0d1117" stroke="#30363d"/>
+  <text x="56" y="312" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#8b949e">OVERALL SCORE</text>
+  <rect x="56" y="324" width="260" height="14" rx="4" fill="#21262d"/>
+  <rect x="56" y="324" width="166" height="14" rx="4" fill="#d29922"/>
+  <text x="340" y="336" font-family="ui-monospace, Menlo, monospace" font-size="18" fill="#d29922" font-weight="700">64/100  C</text>
+
+  <text x="56" y="378" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3fb950">Open Graph</text>
+  <rect x="180" y="366" width="200" height="10" rx="5" fill="#21262d"/>
+  <rect x="180" y="366" width="200" height="10" rx="5" fill="#3fb950"/>
+  <text x="390" y="378" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3fb950">100</text>
+
+  <text x="56" y="402" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3fb950">Technical</text>
+  <rect x="180" y="390" width="200" height="10" rx="5" fill="#21262d"/>
+  <rect x="180" y="390" width="200" height="10" rx="5" fill="#3fb950"/>
+  <text x="390" y="402" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#3fb950">100</text>
+
+  <text x="56" y="426" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#d29922">Title</text>
+  <rect x="180" y="414" width="200" height="10" rx="5" fill="#21262d"/>
+  <rect x="180" y="414" width="80" height="10" rx="5" fill="#d29922"/>
+  <text x="390" y="426" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#d29922">40</text>
+
+  <text x="56" y="450" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#f85149">Content</text>
+  <rect x="180" y="438" width="200" height="10" rx="5" fill="#21262d"/>
+  <rect x="180" y="438" width="8" height="10" rx="5" fill="#f85149"/>
+  <text x="390" y="450" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#f85149">2</text>
+
+  <text x="56" y="474" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#f85149">JSON-LD</text>
+  <rect x="180" y="462" width="200" height="10" rx="5" fill="#21262d"/>
+  <text x="390" y="474" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#f85149">0</text>
+
+  <text x="430" y="378" font-family="ui-monospace, Menlo, monospace" font-size="12" fill="#8b949e">TOP ISSUES</text>
+  <text x="430" y="400" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#f85149">1. Content weak (2/100)</text>
+  <text x="430" y="418" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#f85149">2. JSON-LD missing</text>
+  <text x="430" y="436" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#d29922">3. Title length (40/100)</text>
+  <text x="430" y="454" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#d29922">4. Meta desc length</text>
+</svg>

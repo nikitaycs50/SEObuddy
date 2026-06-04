@@ -1,12 +1,49 @@
 # SEObuddy
 
-[![PyPI version](https://img.shields.io/pypi/v/seobuddy.svg)](https://pypi.org/project/seobuddy/)
-[![Python versions](https://img.shields.io/pypi/pyversions/seobuddy.svg)](https://pypi.org/project/seobuddy/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+<p align="center">
+  <strong>Technical SEO audits from your terminal — live scores, colour-coded results, Markdown reports.</strong>
+</p>
 
-A Python CLI that crawls a website and runs a **technical SEO audit**. You get live progress and scores in the terminal, plus a **Markdown report** you can open in any editor or share with your team.
+<p align="center">
+  <a href="https://pypi.org/project/seobuddy/"><img src="https://img.shields.io/pypi/v/seobuddy.svg?style=for-the-badge&amp;labelColor=161b22&amp;color=3fb950" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/seobuddy/"><img src="https://img.shields.io/pypi/pyversions/seobuddy.svg?style=for-the-badge&amp;labelColor=161b22&amp;color=58a6ff" alt="Python versions"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-58a6ff?style=for-the-badge&amp;labelColor=161b22" alt="License MIT"></a>
+</p>
 
-> **Note:** This is an open-source **technical SEO audit CLI**, not affiliated with the commercial product at [seobuddy.com](https://seobuddy.com/).
+<p align="center">
+  <code>pip install seobuddy</code> &nbsp;→&nbsp; <code>seobuddy https://yoursite.com</code> &nbsp;→&nbsp; done.
+</p>
+
+<p align="center">
+  No clone. No build step. One package from <a href="https://pypi.org/project/seobuddy/">PyPI</a>.
+</p>
+
+---
+
+## See it in action
+
+<p align="center">
+  <img src="docs/assets/terminal-preview.svg" alt="SEObuddy terminal output: coloured progress, per-page score 64/100, category bars, and top issues" width="780">
+</p>
+
+<p align="center">
+  <em>Real Rich UI in your terminal — greens for passes, yellows for warnings, reds for failures.</em>
+  <br>
+  <a href="docs/REPORT_EXAMPLE.md">Full terminal + report examples</a>
+</p>
+
+**Install in seconds:**
+
+```bash
+pip install seobuddy
+seobuddy https://nikitay.com
+```
+
+Prefer an isolated CLI? Use `pipx install seobuddy` instead of `pip`.
+
+Crawl your site, watch scores update live, then open the timestamped `*-report.md` file. That is the whole workflow.
+
+> **Note:** Open-source **technical SEO audit CLI** — not affiliated with the commercial product at [seobuddy.com](https://seobuddy.com/).
 
 ## Documentation
 
@@ -32,51 +69,27 @@ Full manuals (same content as below, in more detail):
 
 ## Quick start
 
-### 1. Install
+| Step | Command |
+|------|---------|
+| **Install** | `pip install seobuddy` |
+| **Audit** | `seobuddy https://nikitay.com` |
+| **Report** | Open `yyyymmddhhmm-<hostname>-report.md` in the current directory |
 
-**From PyPI** (recommended — no clone or GitHub URL required):
-
-```bash
-pip install seobuddy
-# or, for an isolated global CLI (recommended on macOS/Linux):
-pipx install seobuddy
-```
-
-**From source** (contributors / development):
+Defaults: **depth 2**, **5** concurrent requests, **10s** timeout. Use `--depth 0` for a homepage-only check.
 
 ```bash
-git clone https://github.com/nikitaycs50/SEObuddy.git
-cd SEObuddy
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -e .
+seobuddy --help          # all options
+pip install -U seobuddy  # upgrade
+pipx install seobuddy    # isolated global CLI (macOS/Linux)
 ```
 
-Confirm the command is available:
+**Contributors** — clone and editable install:
 
 ```bash
-seobuddy --help
+git clone https://github.com/nikitaycs50/SEObuddy.git && cd SEObuddy
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
 ```
-
-Upgrade an existing install:
-
-```bash
-pip install -U seobuddy
-# or: pipx upgrade seobuddy
-```
-
-### 2. Run a simple audit
-
-```bash
-seobuddy https://nikitay.com
-```
-
-Defaults: crawl **depth 2** (homepage plus two link hops), **5** parallel requests, **10** second timeout, report written to the current directory.
-
-### 3. Read the results
-
-- Watch the **terminal** for per-page scores and a final summary table.
-- Open the generated file `yyyymmddhhmm-<hostname>-report.md` (for example `202606041408-nikitay.com-report.md`).
 
 ## Usage
 
@@ -138,37 +151,25 @@ After `seobuddy https://nikitay.com --depth 1` you should see: startup banner, p
 
 ## Understanding the terminal output
 
-### Startup banner
+Rich renders **colour-coded** bars and grades in real time (disable with `--no-color`).
 
-Shows version, target URL, crawl depth, concurrency, and the User-Agent in use (Chrome desktop by default).
+### Per-page line (live)
 
-### Live progress
-
-Spinner, **current URL**, progress bar, and elapsed time.
-
-### Per-page line
+| Colour | Score | Example |
+|--------|-------|---------|
+| 🟢 Green | 80–100 | `██████████  100/100` · category `✓` |
+| 🟡 Yellow | 60–79 | `████████░░   64/100` · category `~` |
+| 🟠 Orange | 40–59 | `█████░░░░░   47/100` |
+| 🔴 Red | 0–39 | `██░░░░░░░░    2/100` · category `✗` |
 
 ```text
-█████░░░ 63/100  /  — title ✗  meta ~  og ✓  h1 ✓
+████████░░ 64/100  /  — title ~  meta ~  og ✓  h1 ✓
 ```
 
 | Symbol | Meaning |
 |--------|---------|
-| `█` / `░` | Visual score bar |
-| `63/100` | Weighted page score |
-| `/` or `/path` | URL path audited |
-| `✓` | Category passed (score ≥ 80) |
-| `~` | Category warning (60–79) |
-| `✗` | Category failed (&lt; 60) |
-
-### Score colors
-
-| Score | Color |
-|-------|-------|
-| 80–100 | Green |
-| 60–79 | Yellow |
-| 40–59 | Orange |
-| 0–39 | Red |
+| `█` / `░` | Score bar (colour matches score band) |
+| `✓` `~` `✗` | Category pass / warn / fail |
 
 ### Final summary
 
