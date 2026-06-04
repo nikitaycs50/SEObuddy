@@ -49,11 +49,17 @@ Workflow: [.github/workflows/publish-pypi.yml](../.github/workflows/publish-pypi
    - Repository: `SEObuddy`
    - Workflow: `publish-pypi.yml`
    - Environment: (default)
-2. Push a version tag after merging a release:
+2. **Automatic on `main`:** pushing to `main` runs the workflow when package files change (`src/**`, `pyproject.toml`, `README.md`, `LICENSE`). It publishes only if that version is **not** already on PyPI.
+
+3. **Optional tag** (same workflow, no path filter on tags):
 
 ```bash
 git tag v0.2.0
 git push origin v0.2.0
 ```
+
+4. **Manual:** GitHub → Actions → **Publish to PyPI** → **Run workflow**.
+
+Before each new release, bump `__version__` in `src/seobuddy/__init__.py` (e.g. `0.2.0` → `0.2.1`), commit, and push to `main`. Pushes without a version bump succeed but skip upload (version already exists).
 
 The workflow builds with Hatch and publishes via OIDC (no long-lived PyPI token in GitHub secrets).
