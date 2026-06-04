@@ -49,6 +49,8 @@ def _build_markdown(site: SiteAudit) -> str:
     lines.append(f"- **Date:** {site.started_at.strftime('%Y-%m-%d %H:%M')}")
     lines.append(f"- **Seed URL:** {site.seed_url}")
     lines.append(f"- **Pages crawled:** {len(site.pages)}")
+    if site.crawl_capped:
+        lines.append("- **Crawl note:** Stopped at max-pages limit (more URLs were skipped)")
     lines.append(f"- **Duration:** {site.elapsed_s:.1f}s")
     lines.append("")
     lines.append("### Top issues")

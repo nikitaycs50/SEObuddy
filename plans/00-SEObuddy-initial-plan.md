@@ -69,7 +69,7 @@ Options:
   --concurrency INT   Parallel requests  [default: 5]
   --timeout INT       Request timeout seconds  [default: 10]
   --output-dir PATH   Where to write report  [default: ./]
-  --user-agent TEXT   Custom UA string
+  --user-agent TEXT   HTTP User-Agent [default: Chrome desktop UA]
   --no-color          Disable Rich colors
 ```
 

@@ -70,10 +70,11 @@ seobuddy <URL> [OPTIONS]
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--depth` | `2` | Link hops from the seed URL. `0` = seed page only. |
+| `--max-pages` | `50` | Stop crawling after this many pages (avoids huge sites). |
 | `--concurrency` | `5` | Maximum parallel HTTP requests during the crawl. |
 | `--timeout` | `10` | Per-request timeout in seconds. |
 | `--output-dir` | `.` | Folder where the Markdown report is saved. |
-| `--user-agent` | `SEObuddy/0.1.0` | User-Agent sent with every request. |
+| `--user-agent` | Chrome 131 (desktop) | HTTP User-Agent on every request. Default mimics Chrome for compatibility; override to identify SEObuddy if required. |
 | `--no-color` | off | Plain terminal output (no Rich colors). |
 
 ### Examples
@@ -94,6 +95,9 @@ seobuddy https://nikitay.com --output-dir ./reports
 # CI / logs (no colors)
 seobuddy https://nikitay.com --no-color
 
+# Custom User-Agent (default is Chrome-like)
+seobuddy https://nikitay.com --user-agent "SEObuddy/0.1.0 (+https://nikitay.com)"
+
 # Module entry point
 python -m seobuddy https://nikitay.com
 ```
@@ -111,7 +115,7 @@ After `seobuddy https://nikitay.com --depth 1` you should see: startup banner, p
 
 ### Startup banner
 
-Shows version, target URL, crawl depth, and concurrency.
+Shows version, target URL, crawl depth, concurrency, and the User-Agent in use (Chrome desktop by default).
 
 ### Live progress
 
@@ -188,12 +192,16 @@ Page score = weighted average of categories. Site score = average of all page sc
 
 **Links check:** up to 20 unique internal URLs probed per page; penalizes generic anchors (“click here”, “read more”, etc.).
 
+## Auditing large sites (e.g. Google)
+
+Mega-sites expose thousands of locale and redirect URLs. SEObuddy caps crawls at **`--max-pages`** (default 50), dedupes by **path** (not query), skips utility routes (`/ml`, `/intl/…`, policies), drops non-crawlable **redirect targets**, and truncates long paths in the terminal. For Google, use `--depth 0` or `--max-pages 10`.
+
 ## Crawl behavior
 
-- **BFS** with a visited set (normalized URLs); seed at depth `0`, enqueue links only if `depth < config.depth`
+- **BFS** with path-based dedup; seed at depth `0`, enqueue links only if `depth < config.depth`
 - **Same domain only** — external links are ignored (`www.` stripped when comparing netloc)
-- **Skips:** `mailto:`, `tel:`, `javascript:`, `data:`, fragments-only, non-HTML, duplicate URLs, CDN utility paths like `/cdn-cgi/`
-- **Redirects** — followed up to 5 hops; audits use **final URL**
+- **Skips:** `mailto:`, `tel:`, `javascript:`, `data:`, fragments-only, non-HTML, duplicate paths, `/cdn-cgi/`, `/ml`, long query strings
+- **Redirects** — followed up to 5 hops; non-crawlable final URLs are not audited
 - **Per page:** URL, status, headers, HTML body, fetch time (ms); pages yielded as they complete for live UI
 
 ## Architecture
@@ -357,7 +365,7 @@ Expect: terminal progress, per-page lines, report `*-nikitay.com-report.md` with
 ## Privacy and etiquette
 
 - Only requests URLs you point it at, within same domain and depth you set.
-- Use an identifiable `--user-agent` on production sites if required by policy.
+- Default User-Agent mimics **Chrome desktop** so fewer sites block the crawler; set `--user-agent` explicitly if your policy requires an identifiable bot string.
 - **robots.txt** is not implemented in v0.1 — use reasonable depth and concurrency on live sites.
 
 ## License and copyright

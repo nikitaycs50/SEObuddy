@@ -86,7 +86,7 @@ async def _run_audit(url, config) -> SiteAudit:
 
 | Type | Purpose |
 |------|---------|
-| `AuditConfig` | CLI-derived settings (depth, concurrency, timeout, paths, UA) |
+| `AuditConfig` | CLI-derived settings (depth, max_pages, concurrency, timeout, paths, UA). Default UA: `DEFAULT_USER_AGENT` (Chrome 131 desktop) in `models.py` |
 | `PageData` | Raw crawl result: URLs, status, headers, HTML, timing |
 | `CheckResult` | Single category outcome: score, weight, status, findings, suggestions |
 | `PageAudit` | One page’s full check map + weighted score |
@@ -98,6 +98,17 @@ async def _run_audit(url, config) -> SiteAudit:
 ---
 
 ## URL layer (`url_utils.py`)
+
+### Crawl filtering (`url_utils.py`)
+
+| Mechanism | Purpose |
+|-----------|---------|
+| `crawl_dedup_key(url)` | Visited set uses scheme + host + path (no query) |
+| `is_crawlable_url(url)` | Gate before enqueue/fetch |
+| `is_crawlable_path(path)` | Skip prefixes (`/cdn-cgi/`, `/intl/`), policy paths, `/ml`, binary extensions |
+| Post-fetch check | Drop pages whose **final** URL after redirects is not crawlable |
+
+Limits: query length ≤ 120 chars; path length ≤ 200 chars for crawl.
 
 ### `normalize_url(url, base=None) -> str | None`
 
@@ -129,11 +140,13 @@ Compares netloc with `www.` stripped via `normalize_netloc`.
 
 - Queue: `(url, depth)` tuples.
 - Seed at depth `0`; enqueue discovered links only if `depth < config.depth`.
-- Visited set stores **normalized** URLs.
+- Visited set stores **`crawl_dedup_key`** (path without query).
+- Stops when **`pages_fetched >= config.max_pages`** (default 50); sets `crawl_capped`.
 - Batch-dequeues up to `concurrency` URLs per wave; fetches with `asyncio.Semaphore`.
 
 ### Fetch behavior
 
+- `User-Agent` header from `config.user_agent` (default `DEFAULT_USER_AGENT` — Chrome desktop string for site compatibility).
 - `GET` with redirect following (`max_redirects` from config, default 5).
 - `httpx.ConnectError` propagates (seed connection failure).
 - Other `HTTPError` → `PageData` with `status_code=0` (CLI treats as failure on yield).
@@ -216,7 +229,7 @@ Word count tiers: &lt;300 → 0; 300–499 → 60; 500–799 → 80; 800+ → 10
 ## Display (`display.py`)
 
 - `make_console(config)` — honors `--no-color`.
-- `show_banner`, `show_page_result`, `show_summary`, `show_error`.
+- `show_banner` (includes truncated User-Agent), `show_page_result`, `show_summary`, `show_error`.
 - `crawl_progress` context manager → Rich `Progress` (spinner, URL, bar, task progress, elapsed).
 
 No Rich markup in `cli.py` (separation of concerns).
@@ -313,6 +326,14 @@ Expected for nikitay.com:
 ### CI / headless
 
 Use `--no-color` and a dedicated `--output-dir` for artifacts.
+
+---
+
+## HTML parsing (`html_utils.py`)
+
+- `is_html_content(content_type, body)` — rejects XML/JSON/SVG and `<?xml` bodies.
+- `parse_html(html, content_type)` — BeautifulSoup with `XMLParsedAsHTMLWarning` suppressed.
+- Used by `auditor.py` and `crawler.extract_internal_links`.
 
 ---
 

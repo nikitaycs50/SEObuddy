@@ -54,7 +54,7 @@ seobuddy https://nikitay.com --depth 1
 
 You should see:
 
-1. A blue **SEObuddy** banner with version, URL, depth, and concurrency.
+1. A blue **SEObuddy** banner with version, URL, depth, concurrency, and the User-Agent in use.
 2. A **progress bar** while pages are fetched.
 3. **One line per page** with score, path, and quick checks (title, meta, Open Graph, H1).
 4. A **SITE AUDIT COMPLETE** panel with overall score, category table, and top issues.
@@ -84,10 +84,11 @@ seobuddy <URL> [OPTIONS]
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--depth` | `2` | How many link hops from the seed URL to follow. `0` = only the seed page. |
+| `--max-pages` | `50` | Stop after this many pages (recommended for large sites). |
 | `--concurrency` | `5` | Maximum parallel HTTP requests during the crawl. |
 | `--timeout` | `10` | Per-request timeout in seconds. |
 | `--output-dir` | `.` | Folder where the Markdown report is saved. |
-| `--user-agent` | `SEObuddy/0.1.0` | User-Agent sent with every request. |
+| `--user-agent` | Chrome 131 (desktop) | HTTP User-Agent on every request. Default mimics Chrome for compatibility; override if you need an identifiable bot string. |
 | `--no-color` | off | Plain terminal output (no Rich colors). |
 
 ### Common recipes
@@ -110,6 +111,12 @@ seobuddy https://nikitay.com --depth 2 --concurrency 10
 seobuddy https://nikitay.com --output-dir ./reports
 ```
 
+**Custom User-Agent (default is Chrome-like):**
+
+```bash
+seobuddy https://nikitay.com --user-agent "SEObuddy/0.1.0 (+https://nikitay.com)"
+```
+
 **Run without colors (logs, CI):**
 
 ```bash
@@ -128,7 +135,7 @@ python -m seobuddy https://nikitay.com
 
 ### Startup banner
 
-Shows version, target URL, crawl depth, and concurrency.
+Shows version, target URL, crawl depth, concurrency, and the User-Agent in use (Chrome desktop by default).
 
 ### Live progress
 
@@ -222,6 +229,22 @@ Page score = weighted average of categories. Site score = average of all page sc
 
 ---
 
+## Large sites (Google, etc.)
+
+SEObuddy is aimed at **your own site** or small/medium properties. Crawling `google.com` with default settings used to flood the terminal with locale redirect URLs (`/ml?continue=…`) and XML warnings.
+
+Improvements in v0.1:
+
+- **`--max-pages 50`** (default) caps the crawl; the summary shows *Crawl limit reached* when applicable.
+- Paths like **`/ml`**, **`/intl/…`**, policies, and preferences are skipped.
+- **Query-string duplicates** are not crawled separately (`?hl=de` vs `?hl=en` share one path).
+- **Long URLs** are shortened in the terminal.
+- **Non-HTML** and XML responses are not parsed as HTML (no XML warning spam).
+
+For Google, prefer: `seobuddy https://google.com --depth 0` or `--max-pages 10`.
+
+---
+
 ## Crawl behavior (what gets audited)
 
 - Only **same-domain** links are followed (external sites are ignored).
@@ -243,7 +266,7 @@ Page score = weighted average of categories. Site score = average of all page sc
 **Tips:**
 
 - Double-check spelling (`nikitay.com` vs `niktiay.com`).
-- Ensure the site is online and allows your User-Agent.
+- Ensure the site is online. The default Chrome-like User-Agent works on most hosts; try `--user-agent` with a custom string if you get blocked.
 - Increase `--timeout` on slow hosts: `seobuddy https://nikitay.com --timeout 30`.
 
 ---
@@ -282,7 +305,7 @@ Some sites inject links (e.g. email protection). SEObuddy skips common CDN paths
 ## Privacy and etiquette
 
 - SEObuddy only requests URLs you point it at, within the same domain and depth you set.
-- Use a identifiable `--user-agent` on production sites if required by your policy.
+- Default requests use a **Chrome desktop** User-Agent for compatibility; set `--user-agent` explicitly if your policy requires an identifiable bot string.
 - Respect `robots.txt` is **not** implemented in v0.1 — use reasonable depth and concurrency on live sites.
 
 ---

@@ -22,7 +22,7 @@ from seobuddy.display import (
     show_summary,
     update_crawl_progress,
 )
-from seobuddy.models import AuditConfig, SiteAudit, SiteContext
+from seobuddy.models import DEFAULT_USER_AGENT, AuditConfig, SiteAudit, SiteContext
 from seobuddy.report import write_report
 from seobuddy.url_utils import hostname_from_url, normalize_url
 
@@ -74,7 +74,7 @@ async def _run_audit(
         timeout=timeout,
         headers=headers,
     ) as link_client:
-        with crawl_progress(console) as (progress, task_id):
+        with crawl_progress(console, total=config.max_pages) as (progress, task_id):
             async for page in crawler.crawl(url):
                 context.fetched_urls = crawler.fetched_urls
 
@@ -97,6 +97,7 @@ async def _run_audit(
                 show_page_result(console, page_audit)
 
     site.elapsed_s = time.perf_counter() - start
+    site.crawl_capped = crawler.crawl_capped
 
     if not site.pages:
         raise RuntimeError("No pages were fetched")
@@ -110,13 +111,16 @@ async def _run_audit(
 def main(
     url: str = typer.Argument(..., help="Seed URL to audit"),
     depth: int = typer.Option(2, "--depth", help="Crawl depth (0 = seed only)"),
+    max_pages: int = typer.Option(
+        50, "--max-pages", help="Maximum pages to crawl (stops when reached)"
+    ),
     concurrency: int = typer.Option(5, "--concurrency", help="Parallel requests"),
     timeout: int = typer.Option(10, "--timeout", help="Request timeout (seconds)"),
     output_dir: Path = typer.Option(Path("."), "--output-dir", help="Report output directory"),
     user_agent: str = typer.Option(
-        f"SEObuddy/{__version__}",
+        DEFAULT_USER_AGENT,
         "--user-agent",
-        help="Custom User-Agent",
+        help="HTTP User-Agent (default: Chrome desktop for site compatibility)",
     ),
     no_color: bool = typer.Option(False, "--no-color", help="Disable Rich colors"),
 ) -> None:
@@ -131,6 +135,7 @@ def main(
 
     config = AuditConfig(
         depth=depth,
+        max_pages=max_pages,
         concurrency=concurrency,
         timeout=timeout,
         output_dir=output_dir,

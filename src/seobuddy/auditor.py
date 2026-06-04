@@ -18,6 +18,7 @@ from seobuddy.checks import (
     title,
 )
 from seobuddy.checks.base import CATEGORY_ORDER, weighted_page_score
+from seobuddy.html_utils import is_html_content, parse_html
 from seobuddy.models import AuditConfig, CheckResult, CheckStatus, PageAudit, PageData, SiteContext
 from seobuddy.url_utils import path_display
 
@@ -36,6 +37,10 @@ def _empty_result(name: str, weight: float) -> CheckResult:
     )
 
 
+def _minimal_soup() -> BeautifulSoup:
+    return BeautifulSoup("<html></html>", "lxml")
+
+
 async def audit_page(
     page: PageData,
     context: SiteContext,
@@ -43,27 +48,18 @@ async def audit_page(
     client: httpx.AsyncClient | None = None,
 ) -> PageAudit:
     html = page.html or ""
-    is_html = page.status_code < 400 and html.strip()
-    content_type = (page.headers.get("content-type") or "").lower()
-    if page.status_code >= 400:
-        is_html = False
+    content_type = page.headers.get("content-type") or ""
+    is_html = page.status_code < 400 and html.strip() and is_html_content(content_type, html)
 
-    if is_html and "text/html" not in content_type and content_type:
-        # Still try to parse if we have HTML body from crawler
-        if not html.lstrip().startswith(("<!DOCTYPE", "<html", "<HTML", "<!doctype")):
-            is_html = bool(html.lstrip().startswith("<"))
-
-    soup = BeautifulSoup(html, "lxml") if html else None
+    soup = parse_html(html, content_type) if is_html else None
     results: dict[str, CheckResult] = {}
 
-    if not soup or not is_html:
+    if not soup:
         from seobuddy.checks.base import CATEGORY_WEIGHTS
 
         for cat in CATEGORY_ORDER:
             if cat == "technical":
-                results[cat] = technical.check(
-                    BeautifulSoup("<html></html>", "lxml"), page, context
-                )
+                results[cat] = technical.check(_minimal_soup(), page, context)
             else:
                 results[cat] = _empty_result(cat, CATEGORY_WEIGHTS[cat])
     else:

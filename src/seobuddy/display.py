@@ -26,7 +26,8 @@ from seobuddy.checks.base import (
     letter_grade,
     top_issues,
 )
-from seobuddy.models import AuditConfig, PageAudit, SiteAudit
+from seobuddy.models import AuditConfig, PageAudit, SiteAudit, format_user_agent_display
+from seobuddy.url_utils import path_display as format_path
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -52,10 +53,13 @@ def score_bar(score: int, width: int = 12) -> str:
 
 
 def show_banner(console: Console, config: AuditConfig, url: str) -> None:
+    ua = format_user_agent_display(config.user_agent)
     body = (
         f"[bold]🔍 SEObuddy[/bold]  v{__version__}\n"
         f"Auditing: [cyan]{url}[/cyan]\n"
-        f"Depth: {config.depth}  |  Concurrency: {config.concurrency}"
+        f"Depth: {config.depth}  |  Concurrency: {config.concurrency}  |  "
+        f"Max pages: {config.max_pages}\n"
+        f"User-Agent: [dim]{ua}[/dim]"
     )
     console.print(Panel(body, title="SEObuddy", border_style="blue"))
 
@@ -87,8 +91,13 @@ def update_crawl_progress(
     completed: int,
     total: int | None,
 ) -> None:
-    desc = url[:60] + ("…" if len(url) > 60 else "")
-    progress.update(task_id, description=desc, completed=completed, total=total)
+    desc = format_path(url, max_len=52)
+    progress.update(
+        task_id,
+        description=desc,
+        completed=completed,
+        total=total if total is not None else completed,
+    )
 
 
 def _category_icons(page: PageAudit) -> str:
@@ -112,10 +121,11 @@ def show_page_result(console: Console, page: PageAudit) -> None:
     style = score_style(page.score)
     bar = score_bar(page.score, 8)
     icons = _category_icons(page)
-    console.print(
-        f"[{style}]{bar} {page.score}/100[/{style}]  "
-        f"[dim]{page.path_display}[/dim]  — {icons}"
-    )
+    path = page.path_display
+    line = Text()
+    line.append(f"{bar} {page.score}/100", style=style)
+    line.append(f"  {path}  — {icons}", style="dim")
+    console.print(line)
 
 
 def show_summary(console: Console, site: SiteAudit) -> None:
@@ -128,8 +138,10 @@ def show_summary(console: Console, site: SiteAudit) -> None:
         f"[bold]SITE AUDIT COMPLETE[/bold]  ·  {site.hostname}\n"
         f"{len(site.pages)} pages  ·  {site.elapsed_s:.1f}s"
     )
+    if site.crawl_capped:
+        header += "  ·  [yellow]Crawl limit reached[/yellow]"
     if site.report_path:
-        header += f"  ·  Report: {site.report_path.name}"
+        header += f"\nReport: {site.report_path.name}"
 
     agg = aggregate_category_scores(site.pages)
     table = Table(show_header=True, header_style="bold")

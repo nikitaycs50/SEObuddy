@@ -49,7 +49,7 @@ TOP ISSUES (by impact)
   ⑤ Content weak (avg 47/100, 2/19 pages OK)
 ```
 
-During the crawl you also see a startup banner, a progress bar with the current URL, and **one line per page** (score bar, path, quick check icons: `✓` / `~` / `✗`).
+During the crawl you also see a startup banner (including the User-Agent), a progress bar with the current URL, and **one line per page** (score bar, path, quick check icons: `✓` / `~` / `✗`).
 
 ---
 
