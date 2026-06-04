@@ -13,6 +13,7 @@ from seobuddy.checks.base import (
     letter_grade,
     top_issues,
 )
+from seobuddy import AUTHOR_NAME, AUTHOR_URL, CREATED_BY
 from seobuddy.models import SiteAudit
 
 
@@ -110,5 +111,8 @@ def _build_markdown(site: SiteAudit) -> str:
     else:
         lines.append("- Continue monitoring; no critical recommendations.")
     lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append(f"*{CREATED_BY} — [{AUTHOR_NAME}]({AUTHOR_URL})*")
 
     return "\n".join(lines)

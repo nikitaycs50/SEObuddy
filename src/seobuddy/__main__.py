@@ -1,3 +1,3 @@
-from seobuddy.cli import app
+from seobuddy.cli import run
 
-app()
+run()

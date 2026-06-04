@@ -32,3 +32,4 @@ async def test_write_report_sections(tmp_path: Path):
     assert "Score Breakdown" in text
     assert "Page-by-Page" in text
     assert "Recommendations" in text
+    assert "Created by NikitaY.com" in text

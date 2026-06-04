@@ -19,7 +19,7 @@ dev = [
 ]
 
 [project.scripts]
-seobuddy = "seobuddy.cli:app"
+seobuddy = "seobuddy.cli:run"
 
 [build-system]
 requires = ["hatchling"]

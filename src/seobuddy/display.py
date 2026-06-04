@@ -18,10 +18,11 @@ from rich.progress import (
 from rich.table import Table
 from rich.text import Text
 
-from seobuddy import __version__
+from seobuddy import AUTHOR_URL, CREATED_BY, COPYRIGHT, GITHUB_URL, __version__
 from seobuddy.checks.base import (
     CATEGORY_LABELS,
     CATEGORY_ORDER,
+    CATEGORY_WEIGHTS,
     aggregate_category_scores,
     letter_grade,
     top_issues,
@@ -31,6 +32,59 @@ from seobuddy.url_utils import path_display as format_path
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+
+def branding_rich() -> str:
+    return f"[dim]{CREATED_BY}[/dim]  [link={AUTHOR_URL}]{AUTHOR_URL}[/link]"
+
+
+def show_branding(console: Console, *, leading_newline: bool = False) -> None:
+    if leading_newline:
+        console.print()
+    console.print(branding_rich())
+
+
+def show_about(console: Console) -> None:
+    """Print project overview, workflow, and copyright."""
+    intro = (
+        f"[bold]🔍 SEObuddy[/bold]  v{__version__}\n\n"
+        "A Python CLI that crawls a website and runs a [bold]technical SEO audit[/bold]. "
+        "You get live progress and scores in the terminal, plus a Markdown report "
+        "you can open in any editor or share with your team."
+    )
+    console.print(Panel(intro, title="About SEObuddy", border_style="blue"))
+
+    workflow = (
+        "[bold]How it works[/bold]\n\n"
+        "1. Validates and normalizes your seed URL\n"
+        "2. [cyan]BFS-crawls[/cyan] same-domain HTML pages with async HTTP (httpx)\n"
+        "3. Audits each page with [cyan]10 weighted SEO checks[/cyan] (BeautifulSoup + lxml)\n"
+        "4. Renders a Rich terminal UI — progress, per-page scores, final summary\n"
+        "5. Writes [cyan]yyyymmddhhmm-<hostname>-report.md[/cyan] to [cyan]--output-dir[/cyan]\n\n"
+        "[bold]Defaults[/bold]\n"
+        "Depth [cyan]2[/cyan]  ·  Max pages [cyan]50[/cyan]  ·  "
+        "Concurrency [cyan]5[/cyan]  ·  Timeout [cyan]10s[/cyan]\n\n"
+        "[bold]Crawl behavior[/bold]\n"
+        "Same domain only, path deduplication, configurable depth and page cap. "
+        "Static HTML only (no JavaScript rendering). robots.txt is not consulted in v0.1."
+    )
+    console.print(Panel(workflow, border_style="dim"))
+
+    category_lines = [
+        f"• {CATEGORY_LABELS[cat]} ({int(CATEGORY_WEIGHTS[cat] * 100)}%)"
+        for cat in CATEGORY_ORDER
+    ]
+    categories = "[bold]Audit categories[/bold]\n\n" + "\n".join(category_lines)
+    console.print(Panel(categories, border_style="dim"))
+
+    links = (
+        f"[bold]Links[/bold]\n\n"
+        f"GitHub: [link={GITHUB_URL}]{GITHUB_URL}[/link]\n"
+        f"Website: [link={AUTHOR_URL}]{AUTHOR_URL}[/link]\n\n"
+        f"[dim]{COPYRIGHT}[/dim]\n"
+        f"[dim]{CREATED_BY}[/dim]"
+    )
+    console.print(Panel(links, title="Project", border_style="green"))
 
 
 def make_console(config: AuditConfig) -> Console:
@@ -59,7 +113,8 @@ def show_banner(console: Console, config: AuditConfig, url: str) -> None:
         f"Auditing: [cyan]{url}[/cyan]\n"
         f"Depth: {config.depth}  |  Concurrency: {config.concurrency}  |  "
         f"Max pages: {config.max_pages}\n"
-        f"User-Agent: [dim]{ua}[/dim]"
+        f"User-Agent: [dim]{ua}[/dim]\n"
+        f"{branding_rich()}"
     )
     console.print(Panel(body, title="SEObuddy", border_style="blue"))
 
@@ -175,3 +230,5 @@ def show_summary(console: Console, site: SiteAudit) -> None:
         console.print("\n[bold]TOP ISSUES (by impact)[/bold]")
         for line in issues:
             console.print(f"  {line}")
+
+    show_branding(console, leading_newline=True)

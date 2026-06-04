@@ -3,20 +3,24 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 import time
 from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
 import typer
+from rich.console import Console
 
-from seobuddy import __version__
+from seobuddy import CLI_EPILOG, __version__
 from seobuddy.auditor import audit_page
 from seobuddy.crawler import AsyncCrawler
 from seobuddy.display import (
     crawl_progress,
     make_console,
+    show_about,
     show_banner,
+    show_branding,
     show_error,
     show_page_result,
     show_summary,
@@ -28,7 +32,7 @@ from seobuddy.url_utils import hostname_from_url, normalize_url
 
 app = typer.Typer(
     name="seobuddy",
-    help="Crawl a website and produce a technical SEO audit.",
+    help=f"Crawl a website and produce a technical SEO audit (v{__version__}).",
     add_completion=False,
 )
 
@@ -47,6 +51,13 @@ def _validate_url(url: str) -> str:
     if not normalized:
         raise typer.BadParameter("Invalid URL")
     return normalized
+
+
+def _about_callback(value: bool) -> None:
+    if value:
+        no_color = "--no-color" in sys.argv
+        show_about(make_console(AuditConfig(no_color=no_color)))
+        raise typer.Exit()
 
 
 async def _run_audit(
@@ -107,7 +118,7 @@ async def _run_audit(
     return site
 
 
-@app.command()
+@app.command(epilog=CLI_EPILOG)
 def main(
     url: str = typer.Argument(..., help="Seed URL to audit"),
     depth: int = typer.Option(2, "--depth", help="Crawl depth (0 = seed only)"),
@@ -123,6 +134,13 @@ def main(
         help="HTTP User-Agent (default: Chrome desktop for site compatibility)",
     ),
     no_color: bool = typer.Option(False, "--no-color", help="Disable Rich colors"),
+    about: bool = typer.Option(
+        False,
+        "--about",
+        help="Show how SEObuddy works, copyright, and project links",
+        callback=_about_callback,
+        is_eager=True,
+    ),
 ) -> None:
     """Crawl URL and run technical SEO audit."""
     console = make_console(AuditConfig(no_color=no_color))
@@ -159,5 +177,15 @@ def main(
         raise typer.Exit(1) from e
 
 
+def run() -> None:
+    """Console script entrypoint (branding footer on CLI usage errors)."""
+    try:
+        app()
+    except SystemExit as exc:
+        if exc.code == 2:
+            show_branding(Console(stderr=True), leading_newline=True)
+        raise
+
+
 if __name__ == "__main__":
-    app()
+    run()
