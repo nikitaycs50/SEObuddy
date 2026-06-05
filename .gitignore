@@ -1,22 +1,2 @@
-.venv/
-__pycache__/
-*.py[cod]
-*.egg-info/
-dist/
-build/
-.pytest_cache/
-
-# Local audit reports (may include crawled URLs, emails, etc.)
-*-report.md
-
-# Secrets and credentials — never commit
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-*.p12
-*.pfx
-credentials.json
-secrets.json
-.secrets/
+# Created by venv; see https://docs.python.org/3/library/venv.html
+*
